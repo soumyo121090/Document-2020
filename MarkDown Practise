@@ -1,1 +1,3 @@
-
+| Element | Description | Required | Notes |
+| ------- | ----------- | -------- | ----- |
+| Object  | A list of Array objects | Required | None |
