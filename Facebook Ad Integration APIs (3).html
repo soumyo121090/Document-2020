@@ -1,0 +1,243 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Facebook Ad Integration APIs</title>
+  <link rel="stylesheet" href="https://stackedit.io/style.css" />
+</head>
+
+<body class="stackedit">
+  <div class="stackedit__left">
+    <div class="stackedit__toc">
+      
+<ul>
+<li><a href="#facebook-ad-integration-apis">Facebook Ad Integration APIs</a>
+<ul>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#get-access-token">Get Access Token</a></li>
+<li><a href="#claim-accounts">Claim Accounts</a></li>
+<li><a href="#create-ad-accounts">Create Ad Accounts</a></li>
+<li><a href="#campaigns">Campaigns</a></li>
+<li><a href="#error-codes">Error Codes</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+  </div>
+  <div class="stackedit__right">
+    <div class="stackedit__html">
+      <h1 id="facebook-ad-integration-apis">Facebook Ad Integration APIs</h1>
+<h2 id="overview">Overview</h2>
+<p><strong>Rebid</strong> platform uses  Business Management APIs to create and maintain a business’ organic and paid presence on Facebook. Facebook Business Manager API enable <strong>Rebid</strong> to connect business assets to facilitate permission management, create ad accounts and assign credit to buy ads on behalf of another company.</p>
+<p>In this document, you can find a list of Facebook APIs that integrate with <strong>Rebid</strong>.</p>
+<h2 id="get-access-token">Get Access Token</h2>
+<p>An <code>access_token</code> is an opaque string that identifies a user, app, or Page and can be used by the app to make graph API calls. When someone connects with an app using Facebook Login and approves the request for permissions, the app obtains an access token that provides temporary, secure access to Facebook APIs. Access tokens are obtained via a number of methods.</p>
+<p>To generate an app access token, you need:</p>
+<ul>
+<li>
+<p>The <em>App ID</em></p>
+</li>
+<li>
+<p>The <em>App Secret</em></p>
+</li>
+</ul>
+<p><strong>Request Body</strong></p>
+<pre><code>curl -X GET "https://graph.facebook.com/oauth/access_token
+  ?client_id={your-app-id}
+  &amp;client_secret={your-app-secret}
+  &amp;grant_type=client_credentials"
+</code></pre>
+<blockquote>
+<p>This call will return an app access token which can be used in place of a user access token to make API calls as noted above.</p>
+</blockquote>
+<h2 id="claim-accounts">Claim Accounts</h2>
+<p>This API enables <strong>Rebid</strong> to manage ad accounts as a Business Manager with the “Admin” role.<br>
+To claim an ad account for your business, provide the ad account ID in the format <code>act_###</code>. Send a <code>POST</code>:</p>
+<pre class=" language-http"><code class="prism  language-http">curl \
+
+"adaccount_id=act_&lt;AD_ACCOUNT_ID&gt;" \
+
+"access_token=&lt;ACCESS_TOKEN&gt;" \
+
+"https://graph.facebook.com/&lt;API_VERSION&gt;/&lt;BUSINESS_ID&gt;/owned_ad_accounts"
+</code></pre>
+<p>If you are an Admin of the ad account, Facebook immediately approve this claim request. Facebook returns <code>access_status</code>  set to  <code>CONFIRMED</code>.</p>
+<h2 id="create-ad-accounts">Create Ad Accounts</h2>
+<p>To use this API, a valid business and page setup is mandatory. If you have any incomplete ad accounts or pages unpublished by Facebook, your calls fail.</p>
+<p><strong>Request Body</strong></p>
+<pre class=" language-curl"><code class="prism  language-curl">
+-F "name=MyAdAccount" \
+
+-F "currency=USD" \
+
+-F "timezone_id=1" \
+
+-F "end_advertiser=&lt;END_ADVERTISER_ID&gt;" \
+
+-F "media_agency=&lt;MEDIA_AGENCY_ID&gt;" \
+
+-F "partner=NONE" \
+
+-F "access_token=&lt;ACCESS_TOKEN&gt;" \
+
+"https://graph.facebook.com/&lt;API_VERSION&gt;/&lt;BUSINESS_ID&gt;/adaccount"
+</code></pre>
+<p><strong>Available fields are</strong>:</p>
+
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td>Name of the ad account</td>
+<td>string</td>
+<td></td>
+</tr>
+<tr>
+<td><code>timezone_id</code></td>
+<td>ID of the timezone</td>
+<td>int</td>
+<td></td>
+</tr>
+<tr>
+<td><code>currency</code></td>
+<td>Currency abbrevation used for this ad account</td>
+<td>string</td>
+<td></td>
+</tr>
+<tr>
+<td><code>partner</code></td>
+<td>Facebook Business Partner (FBP). Must be a Facebook Page Alias, Facebook Page ID or a Facebook App ID. If unavailable, use NONE or UNFOUND</td>
+<td>long or string</td>
+<td>Must be a Facebook Page Alias, Facebook Page ID or a Facebook app ID</td>
+</tr>
+<tr>
+<td><code>end_advertiser</code></td>
+<td>Entity the ads will target. Must be a Business ID. If unavailable, use NONE or UNFOUND</td>
+<td>long or string</td>
+<td>Must be a Business ID</td>
+</tr>
+<tr>
+<td><code>media_agency</code></td>
+<td>Agency; this could be your own business. Must be a Facebook Page Alias, Facebook Page ID or a Facebook App ID. If unavailable, use NONE or UNFOUND</td>
+<td>long or string</td>
+<td>Must be a Facebook Page Alias, Facebook Page ID or a Facebook app ID.</td>
+</tr>
+<tr>
+<td><code>invoice</code></td>
+<td>If a business has a Business Manager-Owned Normal Credit Line with Facebook, we attach the ad account to that credit line</td>
+<td>boolean</td>
+<td>set <code>invoice</code> to <code>true</code> to add existing credit line with new ad account</td>
+</tr>
+</tbody>
+</table><blockquote>
+<p>If your ad account doesn’t have an advertiser, Media Agency, or Partner, specify <code>NONE</code>. If your ad account has an advertiser, Media Agency, or Partner, but they are not on Facebook as a Page or an app, specify <code>UNFOUND</code> .</p>
+</blockquote>
+<h2 id="campaigns">Campaigns</h2>
+<p>A campaign is the highest level organizational structure within an ad account and should represent a single objective for an advertiser, for example, to drive page post engagement. Setting the objective of the campaign enforces validation on any ads added to that campaign to ensure they also have the correct objective.</p>
+<p><strong>Create a Campaign</strong></p>
+<pre><code>curl -X POST \
+  -F 'name="My First Campaign"' \
+  -F 'objective="PAGE_LIKES"' \
+  -F 'status="PAUSED"' \
+  -F 'special_ad_categories=[]' \
+  -F 'access_token=&lt;ACCESS_TOKEN&gt;' \
+  https://graph.facebook.com/v14.0/act_&lt;AD_ACCOUNT_ID&gt;/campaigns
+</code></pre>
+<p><strong>Get Campaign Details</strong><br>
+To read the campaigns associated with a specific account, you make a request to the connection of the ad account you are using. By default facebook only return campaigns whose status is <code>ACTIVE</code> or <code>PAUSED</code>, so you need to specify additional statuses if required:</p>
+<pre><code>curl -X GET \
+  -d 'effective_status=[
+       "ACTIVE",
+       "PAUSED"
+     ]' \
+  -d 'fields="name,objective"' \
+  -d 'access_token=&lt;ACCESS_TOKEN&gt;' \
+  https://graph.facebook.com/v14.0/act_&lt;AD_ACCOUNT_ID&gt;/campaigns
+</code></pre>
+<p><strong>Description</strong></p>
+
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td>Unique name of the campaign</td>
+<td></td>
+</tr>
+<tr>
+<td><code>objective</code></td>
+<td>are actions you want people to make when they see your ad</td>
+<td>Example Value: <code>PAGE_LIKES</code> or <code>POST_ENGAGEMENT</code></td>
+</tr>
+<tr>
+<td>status</td>
+<td>Current status of the campaign</td>
+<td>Possible Values: <code>ACTIVE</code>/<code>PAUSED</code></td>
+</tr>
+</tbody>
+</table><h2 id="error-codes">Error Codes</h2>
+<p>The following are error codes returned by the API:</p>
+
+<table>
+<thead>
+<tr>
+<th>Error Code</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>-</code></td>
+<td>Negative-value error codes are internal Facebook errors. Check  <code>error_subcode</code>  for the actual failure code.</td>
+</tr>
+<tr>
+<td><code>1</code></td>
+<td>An unknown error occurred</td>
+</tr>
+<tr>
+<td><code>1</code>, subcode  <code>99</code></td>
+<td>An unknown error occurred. This error may occur if you set  <code>level</code>  to  <code>adset</code>  but the correct value should be  <code>campaign</code>.</td>
+</tr>
+<tr>
+<td><code>4</code></td>
+<td>Application request limit reached</td>
+</tr>
+<tr>
+<td><code>10</code></td>
+<td>Application does not have permission for this action</td>
+</tr>
+<tr>
+<td><code>17</code></td>
+<td>User request limit reached</td>
+</tr>
+<tr>
+<td><code>100</code></td>
+<td>Invalid parameter</td>
+</tr>
+</tbody>
+</table><blockquote>
+<p>To learn about more error codes, please go through <a href="https://developers.facebook.com/docs/marketing-api/error-reference">Error Codes</a></p>
+</blockquote>
+
+    </div>
+  </div>
+</body>
+
+</html>
